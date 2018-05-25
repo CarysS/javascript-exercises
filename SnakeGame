@@ -7,243 +7,181 @@
     <link href="index.css" rel="stylesheet" type="text/css" />
   </head>
   <body>
-    <script> window.onload = function(){
-  canvas = document.createElement("canvas"); //creating the canvas with JavaScript
-  canvas.width = 640;
-  canvas.height = 480;
-  //add canvas to html
-  document.body.appendChild(canvas);
-  pen = canvas.getContext("2d"); //define pen
-  
-  //keyboard listener
-  //document.addEventListener('keydown', keyPush);
-
-  //mouse listeners
-  document.addEventListener("mousemove", MouseMoveHandler, false);
-  document.addEventListener("mousedown", MouseClickHandler, false);
-
-
-  
-  //call game update function at 30fps
-  var fps = 30;
-  run=setInterval(update,1000/fps);
-  
-  //set enemy spawn rate 
-  setInterval(spawn, 1000); //spawns enemy every 1 second
-
-spaceship = new Image();
-spaceship.src = "http://www.pngmart.com/files/4/Blue-Whale-PNG-Transparent.png"
-/*
-http://backgroundcheckall.com/wp-content/uploads/2017/12/spaceship-transparent-background-3.png"*/
-
-enemiespic= new Image()
-enemiespic.src = " http://backgroundcheckall.com/wp-content/uploads/2017/12/spaceship-transparent-background-3.png"
-/*"https://png.kisspng.com/20180213/tcw/kisspng-paper-spacecraft-unidentified-flying-object-green-spaceship-decoration-5a83ac79ce43e1.4112536715185788098449.png"*/
-
-shotpic = new Image()
-shotpic.src = "https://content.mycutegraphics.com/graphics/fun/bubble-black-border.png"
-
-bg = new Image()
-bg.src = "http://sfwallpaper.com/images/abstract-space-wallpaper-18.jpg"
-
-gameover = new Image()
-gameover.src = "https://i.ytimg.com/vi/Np3VPhXzGFw/maxresdefault.jpg"
-
-  
+    <canvas id="snake" width="400" height="400"></canvas>
+    <script> window.onload=function(){
+  canvas = document.getElementById("snake"); //without var means global variable
+  pen = canvas.getContext("2d");
+  document.addEventListener("keydown",keyPush); //checks for Events like Keys pressed
+  // running frames per second
+  setInterval(game,1000/15); //interval is in milliseconds (so 1000 is one second) divided by 15 means there's 15 frames per second
 };
 
-//player stats
-player_x = 100;
-player_y = 100
-player_speed = 15;
-player_dimension = 30;
+//these are all global variables so they don't use var
+//define the player x and y positions
+player_x = 10; 
+player_y = 10;
 
-//enemy stats
-enemy_list = [];
-enemy_dimension = 25;
-enemy_speed = 5;
+gridSize = 20;
+tileCount = 20;
 
-//bullet (shot) stats
-shots_list = [];
-shot_dimension = 10;
-shot_speed = 7;
+//player speed
+x_speed = 0;
+y_speed = 0;
 
-//lives
+//apple location
+apple_x = 15;
+apple_y = 15;
+
+//used to store all trailing pieces
+trail = [];
+//starting length
+tail = 5;
+
+//number of lives
 lives = 3;
-
-//score
+keypressed = false;
 score = 0;
+highscore = 0;
 
-//randomly spawn our enemies
-function spawn(){
-  enemy_list.push({x:canvas.width, y:Math.random()*canvas.height});
-}
-
-// update each frame (same as game function in snake program)
-function update(){
-  // fill a black background
-  pen.fillStyle = "black";
-  //pen.fillRect(0,0,canvas.width, canvas.height);
-  pen.drawImage(bg, 0,0, canvas.width, canvas.height);
+//game logic goes here
+function game(){
   
-  //draw player
-  /*
-  pen.fillStyle="indigo";
-  pen.fillRect(player_x-player_dimension/2,player_y- player_dimension/2,player_dimension,player_dimension);
-  */
-
-  pen.drawImage(spaceship,
-player_x - player_dimension / 2,
-player_y - player_dimension / 2 ,
-player_dimension-100,
-player_dimension);
-
-  //update shots
-  pen.fillStyle="#FD0C00";
-  for (var s=0; s < shots_list.length; s++){  
-    shots_list[s].x += shot_speed;
-    /*pen.fillRect(
-      shots_list[s].x - shot_dimension / 2,
-      shots_list[s].y - shot_dimension / 2,
-      shot_dimension,
-      shot_dimension
-      );*/
-      pen.drawImage(shotpic,shots_list[s].x - shot_dimension / 2,
-      shots_list[s].y - shot_dimension / 2,
-      shot_dimension,
-      shot_dimension );
-
-      for (var e = enemy_list.length - 1; e>= 0; e--){
-        //calculate the distance between the shots and enemies
-        var diff_x = Math.abs(enemy_list[e].x - shots_list[s].x);
-        var diff_y = Math.abs(enemy_list[e].y - shots_list[s].y);
-        var dist = Math.sqrt(diff_x*diff_x + diff_y*diff_y);
-        
-        //detects if a shot hits the enemy 
-        if (dist < (shot_dimension + enemy_dimension) / 2) {
-          enemy_list.splice(e, 1);
-          score = score + 1;
-        }
-      }
+  //update player position each frame
+  player_x+=x_speed;
+  player_y+=y_speed;
+  
+  //detecting boundaries
+  if (player_x < 0){
+    player_x = tileCount - 1;
+    lives = lives-1;
+    player_x = 10; 
+    player_y = 10;
+    x_speed = 0;
+    y_speed = 0;
   }
-      //detect player collisison with wall
-      if (player_x < 0 || player_y < 0){
-        lives = lives - 1;
-        player_x = 100;
-        player_y = 100;
-        
-      }
-      
-      
-      pen.fillStyle = "red";
-      //lives text
-        font = pen.font="30px Impact";
-        pen.fillText("LIVES : "+lives,10,50);
-        font = pen.font="20px Impact";
-        pen.fillText("SCORE : "+score, 10,70);
-      
-      
-      //lives reset
-      if (lives === 0){
-        //alert("GAME OVER");
-        clearInterval(run)
-
-        //game over screen
-      //pen.fillRect(0,0,canvas.width,canvas.height);
-      pen.drawImage(gameover,0,0,canvas.width,canvas.height);
-      pen.fillStyle = "#FD0039";
-      font=pen.font="60px Impact";
-      pen.fillText("GAME OVER", 50, 100);
-
-      //player stats
-      player_x = 100;
-      player_y = 100;
-      player_speed = 15;
-      player_dimension = 30;
-      
-      //enemy stats
-      enemy_list = [];
-      enemy_dimension = 25;
-      enemy_speed = 5;
-      
-      //bullet (shot) stats
-      shots_list = [];
-      shot_speed = 7;
-      
-      //lives
-      lives = 3;
-
-      //score
-      score = 0;
-        
+  if (player_x > tileCount - 1){
+    player_x = 0;
+    lives = lives-1;
+    player_x = 10; 
+    player_y = 10;
+    x_speed = 0;
+    y_speed = 0;
+  }
+  if (player_y < 0){
+    player_y = tileCount - 1;
+    lives = lives-1;
+    player_x = 10; 
+    player_y = 10;
+    x_speed = 0;
+    y_speed = 0;
+  }
+  if (player_y > tileCount - 1){
+   player_y = 0;
+   lives = lives-1;
+   player_x = 10; 
+   player_y = 10;
+   x_speed = 0;
+   y_speed = 0;
   }
   
-  pen.fillStyle="maroon";
-  //draw enemies 
-  for (var e = 0; e < enemy_list.length; e++){
-    enemy_list[e].x -= enemy_speed;
-    /*pen.fillRect(
-      enemy_list[e].x - enemy_dimension / 2,
-      enemy_list[e].y - enemy_dimension / 2,
-      enemy_dimension,
-      enemy_dimension
-    );*/
-    pen.drawImage(enemiespic, enemy_list[e].x - enemy_dimension / 2,
-      enemy_list[e].y - enemy_dimension / 2,
-      enemy_dimension,
-      enemy_dimension)
-
-    //calculate the distance
-    var diff_x = Math.abs(enemy_list[e].x - player_x);
-    var diff_y = Math.abs(enemy_list[e].y - player_y);
-    var dist = Math.sqrt(diff_x*diff_x + diff_y*diff_y);
-    
-    //detect if enemy hits player
-    if (dist< (player_dimension + enemy_dimension)/2){
-      //clear stats and reset player if hes hit
-      shots_list = [];
-      enemy_list = [];
-      player_x = player_y = 100;
-      lives = lives-1;
-      break;
+  
+  // create black background
+  pen.fillStyle="black";
+  pen.fillRect(0,0,canvas.width, canvas.height);
+  
+  //draw the snake
+    //update player
+  for(var i=0; i<trail.length; i++){
+    pen.fillStyle="lime";
+    pen.fillRect(trail[i].x*gridSize, trail[i].y*gridSize,gridSize-2,gridSize-2);
+  //detect if the player hits the trail (its tail)
+    if(trail[i].x==player_x && trail[i].y == player_y){
+      //set the snake length back to 5
+      tail = 5;
+      if (x_speed > 0 || y_speed > 0){
+       x_speed = 0;
+       y_speed = 0;
+       lives = lives-1;
+       keypressed = false;
+      }
     }
+    //detect collision with apple
+    if(apple_x == player_x && apple_y == player_y) {
+      //add 1 to the tail length
+      tail++;
+      //moving apple to random x and y
+      apple_x = Math.floor(Math.random()*tileCount);
+      apple_y = Math.floor(Math.random()*tileCount);
+      score++;
+
+    }
+
+      // draw the apple 
+    pen.fillStyle="red";
+    pen.fillRect(apple_x*gridSize, apple_y*gridSize, gridSize, gridSize);
   }
+  
+  //adding player position to the trail
+  trail.push({x:player_x, y:player_y});
+  
+  //this trims down the trail of the snake if it exceeds the actual length
+  while(trail.length>tail) {
+    //this deletes the first value in an Array
+    trail.shift();
+  }
+  
+  //lives
+  font = pen.font="30px Impact";
+  pen.fillText("LIVES : "+lives,10,50);
+  
+  //lives reset
+  if(lives === 0){
+    pen.fillStyle = "red";
+    pen.fillRect(0,0,400,400);
+    x_speed = 0;
+    y_speed = 0;
+    lives = 3;
+    tail = 5;
+    player_x = 10; 
+    player_y = 10;
+    apple_y = 15;
+    apple_x = 15;
+    keypressed = false;
+    if (score > highscore){
+      highscore = score;
+    }
+    alert("GAME OVER - High Score: "+highscore+" Current Score: "+score);
+    score = 0;
+  }
+  
 }
 
-/*
-//define keys
+//keyboard
 function keyPush(evt){
-  switch(evt.keyCode){
-    case 32: //space bar
-      shots_list.push({x:player_x,y:player_y});
+  switch(evt.keyCode){  //switch is like if statement looking for keyCode
+    case 37: //left arrow (all keys in JavaScript mapped to a number)
+      x_speed = -1;
+      y_speed = 0;
+      keypressed = true;
       break;
-    case 37: // left arrow
-      player_x -= player_speed;
-      break;
-    case 38: // up arrow
-      player_y -= player_speed;
+    case 38: //up arrow, but down is positive y because the cordinate plane is inverted
+      x_speed = 0;
+      y_speed = -1;
+      keypressed = true;
       break;
     case 39: //right arrow
-      player_x += player_speed;
+      x_speed = 1;
+      y_speed = 0;
+      keypressed = true;
       break;
     case 40: //down arrow
-      player_y += player_speed;
+      x_speed = 0;
+      y_speed = 1;
+      keypressed = true;
       break;
   }
+  
 }
-*/
-
-function MouseMoveHandler(e){
-  player_y = e.clientY
-}
-
-function MouseClickHandler(e){
-  //this chacks for the left button
-  if (e.button == 0){
-    shots_list.push({x:player_x, y:player_y});
-  }
-}
-
 
 </script>
   </body>
