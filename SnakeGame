@@ -1,0 +1,175 @@
+window.onload=function(){
+  canvas = document.getElementById("snake"); //without var means global variable
+  pen = canvas.getContext("2d");
+  document.addEventListener("keydown",keyPush); //checks for Events like Keys pressed
+  // running frames per second
+  setInterval(game,1000/15); //interval is in milliseconds (so 1000 is one second) divided by 15 means there's 15 frames per second
+};
+
+//these are all global variables so they don't use var
+//define the player x and y positions
+player_x = 10; 
+player_y = 10;
+
+gridSize = 20;
+tileCount = 20;
+
+//player speed
+x_speed = 0;
+y_speed = 0;
+
+//apple location
+apple_x = 15;
+apple_y = 15;
+
+//used to store all trailing pieces
+trail = [];
+//starting length
+tail = 5;
+
+//number of lives
+lives = 3;
+keypressed = false;
+score = 0;
+highscore = 0;
+
+//game logic goes here
+function game(){
+  
+  //update player position each frame
+  player_x+=x_speed;
+  player_y+=y_speed;
+  
+  //detecting boundaries
+  if (player_x < 0){
+    player_x = tileCount - 1;
+    lives = lives-1;
+    player_x = 10; 
+    player_y = 10;
+    x_speed = 0;
+    y_speed = 0;
+  }
+  if (player_x > tileCount - 1){
+    player_x = 0;
+    lives = lives-1;
+    player_x = 10; 
+    player_y = 10;
+    x_speed = 0;
+    y_speed = 0;
+  }
+  if (player_y < 0){
+    player_y = tileCount - 1;
+    lives = lives-1;
+    player_x = 10; 
+    player_y = 10;
+    x_speed = 0;
+    y_speed = 0;
+  }
+  if (player_y > tileCount - 1){
+   player_y = 0;
+   lives = lives-1;
+   player_x = 10; 
+   player_y = 10;
+   x_speed = 0;
+   y_speed = 0;
+  }
+  
+  
+  // create black background
+  pen.fillStyle="black";
+  pen.fillRect(0,0,canvas.width, canvas.height);
+  
+  //draw the snake
+    //update player
+  for(var i=0; i<trail.length; i++){
+    pen.fillStyle="lime";
+    pen.fillRect(trail[i].x*gridSize, trail[i].y*gridSize,gridSize-2,gridSize-2);
+  //detect if the player hits the trail (its tail)
+    if(trail[i].x==player_x && trail[i].y == player_y){
+      //set the snake length back to 5
+      tail = 5;
+      if (x_speed > 0 || y_speed > 0){
+       x_speed = 0;
+       y_speed = 0;
+       lives = lives-1;
+       keypressed = false;
+      }
+    }
+    //detect collision with apple
+    if(apple_x == player_x && apple_y == player_y) {
+      //add 1 to the tail length
+      tail++;
+      //moving apple to random x and y
+      apple_x = Math.floor(Math.random()*tileCount);
+      apple_y = Math.floor(Math.random()*tileCount);
+      score++;
+
+    }
+
+      // draw the apple 
+    pen.fillStyle="red";
+    pen.fillRect(apple_x*gridSize, apple_y*gridSize, gridSize, gridSize);
+  }
+  
+  //adding player position to the trail
+  trail.push({x:player_x, y:player_y});
+  
+  //this trims down the trail of the snake if it exceeds the actual length
+  while(trail.length>tail) {
+    //this deletes the first value in an Array
+    trail.shift();
+  }
+  
+  //lives
+  font = pen.font="30px Impact";
+  pen.fillText("LIVES : "+lives,10,50);
+  
+  //lives reset
+  if(lives === 0){
+    pen.fillStyle = "red";
+    pen.fillRect(0,0,400,400);
+    x_speed = 0;
+    y_speed = 0;
+    lives = 3;
+    tail = 5;
+    player_x = 10; 
+    player_y = 10;
+    apple_y = 15;
+    apple_x = 15;
+    keypressed = false;
+    if (score > highscore){
+      highscore = score;
+    }
+    alert("GAME OVER - High Score: "+highscore+" Current Score: "+score);
+    score = 0;
+  }
+  
+}
+
+//keyboard
+function keyPush(evt){
+  switch(evt.keyCode){  //switch is like if statement looking for keyCode
+    case 37: //left arrow (all keys in JavaScript mapped to a number)
+      x_speed = -1;
+      y_speed = 0;
+      keypressed = true;
+      break;
+    case 38: //up arrow, but down is positive y because the cordinate plane is inverted
+      x_speed = 0;
+      y_speed = -1;
+      keypressed = true;
+      break;
+    case 39: //right arrow
+      x_speed = 1;
+      y_speed = 0;
+      keypressed = true;
+      break;
+    case 40: //down arrow
+      x_speed = 0;
+      y_speed = 1;
+      keypressed = true;
+      break;
+  }
+  
+}
+
